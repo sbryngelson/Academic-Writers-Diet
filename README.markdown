@@ -52,6 +52,14 @@ The script can be called in multiple ways:
 *  ./checkwriting &lt;directory&gt; : In this case the script uses all &#42;.tex and &#42;.bbl files in the directory. If it doesn't find any, then it waits for input from stdin.
 *  ./checkwriting : With no files, the script waits for diff style input on STDIN. I use it this way often. Say, you made some changes to the manuscript. Just do git diff | ./checkwriting and you only have to look at new errors.
 
+### Writer's Diet
+
+The [writer's diet test](http://writersdiet.com/test.php) can be called via
+```
+    ./checkwriting -z
+```
+
+
 ## Notes on the warnings ##
 
 Some of the warnings are obvious, some aren't. The non-obvious ones are discussed here.
@@ -63,6 +71,7 @@ letter in which case it assumes that it is an abbreviation. So to let LaTex know
 
 ## Acks ##
 The original idea and code for this came from Matt Might's [blog](http://matt.might.net/articles/shell-scripts-for-passive-voice-weasel-words-duplicates/)
+The writer's diet test used strings from [troywatson's](https://github.com/troywatson) repository, [StyleApp](https://github.com/troywatson/StyleApp-Style-Checker-Java-Write-like-a-Pro).
 
 Here are some other links that might be useful (and might be integrated
 into awc someday):
