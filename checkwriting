@@ -12,9 +12,12 @@ use Getopt::Long;
 use List::Util qw(sum);
 use utf8;
 
-my @switch_list = ('passive','dups','weasel','abbr','typography','strunk','user');
+# --no-weasel --no-passive --no-typography --no-strunk --no-dup --no-user --no-abbr
+
+my @switch_list = ('passive','dups','weasel','diet','abbr','typography','strunk','user');
 my %options= map {$_=>1} @switch_list;
 my $vimmode = 0;
+my $dietmode = 0;
 Getopt::Long::Configure('pass_through');
 GetOptions( \%options, 'd','v');
 if($options{'v'}){
@@ -25,10 +28,22 @@ if($options{'d'}){
   $_ = 0 foreach values %options;
   delete $options{'d'};
 }
+
+if($options{'z'}){
+  $dietmode=1;
+}
+
+
 Getopt::Long::Configure('no_pass_through');
 
+# ('black','red','green','yellow','blue','purple','cyan','white').
 GetOptions( \%options, 'wordfile=s', 'def_color=s',map {("$_!",$_."_color=s")} @switch_list);
-my ($passive_color,$typography_color,$weasel_color,$dup_color,$abbr_color,$strunk_color,$user_color,$def_color) = (
+my ($passive_color,$typography_color,$weasel_color,$diet_adjectives_color,$diet_junk_color,$diet_prep_color,$diet_verbs_color,$diet_nouns_color,$dup_color,$abbr_color,$strunk_color,$user_color,$def_color) = (
+getBashColor($options{'diet_junk_color'},'red'),
+getBashColor($options{'diet_adjectives_color'},'yellow'),
+getBashColor($options{'diet_prep_color'},'green'),
+getBashColor($options{'diet_verbs_color'},'purple'),
+getBashColor($options{'diet_nouns_color'},'blue'),
 getBashColor($options{'passive_color'},'red'),
 getBashColor($options{'typography_color'},'yellow'),
 getBashColor($options{'weasel_color'},'green'),
@@ -40,7 +55,7 @@ getBashColor($options{'def_color'},'def'),
 );
 
 if ($vimmode) {
-  ($passive_color,$typography_color,$weasel_color,$dup_color,$abbr_color,$strunk_color,$user_color,$def_color) = (
+  ($passive_color,$typography_color,$weasel_color,$diet_adjectives_color,$diet_junk_color,$diet_prep_color,$diet_verbs_color,$diet_nouns_color,$dup_color,$abbr_color,$strunk_color,$user_color,$def_color) = (
     '**',
     '**',
     '**',
@@ -126,13 +141,21 @@ while(($filename=shift @files)){
       #TODO there is a much better way to do this dispatch
       #by keeping the function refs keyed by the same key as
       #options and count.
-      $count{'typography'} = fixTypography() if $options{'typography'};
-      $count{'passive'} = fixPassive() if $options{'passive'};
-      $count{'dups'} = fixDups() if $options{'dups'};
-      $count{'weasel'} = fixWeasel() if $options{'weasel'};
-      $count{'strunk'} = fixStrunk() if $options{'strunk'};
-      $count{'abbr'} = fixAbbr() if $options{'abbr'};
-      $count{'user'} = fixUserWords() if $options{'user'} and @user_words;
+      if($dietmode=1){
+          $count{'dietJunk'} = fixDietJunk() if $options{'diet'};
+          $count{'dietAdjectives'} = fixDietAdjectives() if $options{'diet'};
+          $count{'dietPrepositions'} = fixDietPrepositions() if $options{'diet'};
+          $count{'dietVerbs'} = fixDietVerbs() if $options{'diet'};
+          $count{'dietNouns'} = fixDietNouns() if $options{'diet'};
+      }else{
+          $count{'typography'} = fixTypography() if $options{'typography'};
+          $count{'passive'} = fixPassive() if $options{'passive'};
+          $count{'dups'} = fixDups() if $options{'dups'};
+          $count{'weasel'} = fixWeasel() if $options{'weasel'};
+          $count{'strunk'} = fixStrunk() if $options{'strunk'};
+          $count{'abbr'} = fixAbbr() if $options{'abbr'};
+          $count{'user'} = fixUserWords() if $options{'user'} and @user_words;
+    }
     }
     next unless sum(values %count);
     my $linenum=0;
@@ -155,15 +178,25 @@ while(($filename=shift @files)){
     }
     close $fh;
     unless ($vimmode) {
-      print "\n";
-      print $passive_color,$count{'passive'}||0,' PASSIVE VOICE',"   " if $options{'passive'};
-      print $typography_color,$count{'typography'}||0,' TYPOGRAPHY ERRORS',"   " if $options{'typography'};
-      print $weasel_color,$count{'weasel'}||0,' WEASEL WORDS',"   " if $options{'weasel'};
-      print $dup_color,$count{'dups'}||0,' DUPLICATES',"   " if $options{'dups'};
-      print $strunk_color,$count{'strunk'}||0,' STRUNK AND WHITE',"   " if $options{'strunk'};
-      print $abbr_color,$count{'abbr'}||0,' ABBR',"   " if $options{'abbr'};
-      print $user_color,$count{'user'}||0,' USER' if $options{'user'};
-      print $def_color,"\n";
+        if($dietmode = 1){
+          print "\n";
+          print $diet_junk_color,$count{'dietJunk'}||0,' DIET JUNK WORDS',"   " if $options{'diet'};
+          print $diet_adjectives_color,$count{'dietAdjectives'}||0,' DIET ADJECTIVES',"   " if $options{'diet'};
+          print $diet_prep_color,$count{'dietPrepositions'}||0,' DIET PREPOSITIONS',"   " if $options{'diet'};
+          print $diet_verbs_color,$count{'dietVerbs'}||0,' DIET VERBS',"   " if $options{'diet'};
+          print $diet_nouns_color,$count{'dietNouns'}||0,' DIET NOUNS',"   " if $options{'diet'};
+          print $def_color,"\n";
+        }else{
+          print "\n";
+          print $passive_color,$count{'passive'}||0,' PASSIVE VOICE',"   " if $options{'passive'};
+          print $typography_color,$count{'typography'}||0,' TYPOGRAPHY ERRORS',"   " if $options{'typography'};
+          print $weasel_color,$count{'weasel'}||0,' WEASEL WORDS',"   " if $options{'weasel'};
+          print $dup_color,$count{'dups'}||0,' DUPLICATES',"   " if $options{'dups'};
+          print $strunk_color,$count{'strunk'}||0,' STRUNK AND WHITE',"   " if $options{'strunk'};
+          print $abbr_color,$count{'abbr'}||0,' ABBR',"   " if $options{'abbr'};
+          print $user_color,$count{'user'}||0,' USER' if $options{'user'};
+          print $def_color,"\n";
+        }
     }
     # some spacing from the new file
     print "\n" if @files and $extra;
@@ -231,6 +264,48 @@ sub fixPassive{
   my $regex = '\b(am|are|were|being|is|been|was|be)\b(\s+)(\w+ed|('.join('|',@irregulars).'))\b';
   return $str =~ s/$regex/\x{EFFF}$def_color$passive_color$1$def_color$2$passive_color$3$def_color\x{EFFF}/goi;
 }
+
+
+	# private String[] junk = { "this", "that", "it", "there" };
+	# private String[] adjectives = { "able", "ac", "al", "ant", "ary", "ent",
+	# 		"ful", "ible", "ic", "ive", "less", "ly", "ous" };
+	# private String[] prepositions = { "in", "by", "for", "of", "to", "whether",
+	# 		"from", "before", "over", "along", "through", "until", "with",
+	# 		"on", "under", "after", "around", "up" };
+	# private String[] verbs = { "am", "is", "are", "was", "were", "be", "been",
+	# 		"youve", "its", "youre", "im", "ive" };
+	# private String[] nouns = { "ion", "ism", "ty", "ment", "ness", "ance",
+	# 		"ence", "ments", "ions", "isms", "tys", "ances", "ences" };
+
+
+sub fixDietJunk{
+ my $regex ='\b(this|that|it|there)\b';
+ return $str =~ s/$regex/\x{EFFF}$diet_junk_color$1$def_color\x{EFFF}/goi;
+}
+
+sub fixDietAdjectives{
+ my $regex ='\b*(able|ac|al|ant|ary|ent|ful|ible|ic|ive|less|ly|ous)\b';
+ return $str =~ s/$regex/\x{EFFF}$diet_adjectives_color$1$def_color\x{EFFF}/goi;
+}
+
+
+sub fixDietPrepositions{
+ my $regex ='\b(in|by|for|of|to|whether|from|before|over|along|through|until|with|on|under|after|around|up)\b';
+ return $str =~ s/$regex/\x{EFFF}$diet_prep_color$1$def_color\x{EFFF}/goi;
+}
+
+
+sub fixDietVerbs{
+ my $regex ='\b(am|is|are|was|were|be|been|youve|its|youre|im|ive)\b';
+ return $str =~ s/$regex/\x{EFFF}$diet_verbs_color$1$def_color\x{EFFF}/goi;
+}
+
+
+sub fixDietNouns{
+ my $regex ='\b*(ion|ism|ty|ment|ness|ance|ence|ments|ions|isms|tys|ances|ences)\b';
+ return $str =~ s/$regex/\x{EFFF}$diet_nouns_color$1$def_color\x{EFFF}/goi;
+}
+
 
 sub fixWeasel{
  #TODO add better support for wordfile
