@@ -19,9 +19,12 @@ my %options= map {$_=>1} @switch_list;
 my $vimmode = 0;
 my $dietmode = 0;
 Getopt::Long::Configure('pass_through');
-GetOptions( \%options, 'd','v');
+GetOptions( \%options, 'd','v','z');
 if($options{'v'}){
   $vimmode=1;
+}
+if($options{'z'}){
+  $dietmode=1;
 }
 
 if($options{'d'}){
@@ -29,9 +32,7 @@ if($options{'d'}){
   delete $options{'d'};
 }
 
-if($options{'z'}){
-  $dietmode=1;
-}
+
 
 
 Getopt::Long::Configure('no_pass_through');
@@ -141,7 +142,7 @@ while(($filename=shift @files)){
       #TODO there is a much better way to do this dispatch
       #by keeping the function refs keyed by the same key as
       #options and count.
-      if($dietmode=1){
+      if($dietmode){
           $count{'dietJunk'} = fixDietJunk() if $options{'diet'};
           $count{'dietAdjectives'} = fixDietAdjectives() if $options{'diet'};
           $count{'dietPrepositions'} = fixDietPrepositions() if $options{'diet'};
@@ -178,7 +179,7 @@ while(($filename=shift @files)){
     }
     close $fh;
     unless ($vimmode) {
-        if($dietmode = 1){
+        if($dietmode){
           print "\n";
           print $diet_junk_color,$count{'dietJunk'}||0,' DIET JUNK WORDS',"   " if $options{'diet'};
           print $diet_adjectives_color,$count{'dietAdjectives'}||0,' DIET ADJECTIVES',"   " if $options{'diet'};
